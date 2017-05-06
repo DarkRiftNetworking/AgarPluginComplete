@@ -82,52 +82,57 @@ namespace AgarPlugin
 
             e.Client.SendMessage(playerMessage, SendMode.Reliable);         //TODO Might need to be fragmented? Good to introduce it here...
 
-            e.Client.Subscribe(MOVEMENT_TAG, MovementMessageReceived);
+            e.Client.MessageReceived += MovementMessageReceived;
         }
 
         void MovementMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            DarkRiftReader reader = e.Message.GetReader();
+            TagSubjectMessage message = e.Message as TagSubjectMessage;
 
-            float newX = reader.ReadSingle();
-            float newY = reader.ReadSingle();
-
-            Client client = (Client)sender;
-
-            Player player = players[client];
-
-            player.X = newX;
-            player.Y = newY;
-
-            AgarFoodManager foodManager = PluginManager.GetPluginByType<AgarFoodManager>();
-
-            foreach (FoodItem food in foodManager.Food)
+            if (message != null && message.Tag == MOVEMENT_TAG)
             {
-                if (Math.Pow(player.X - food.X, 2) + Math.Pow(player.Y - food.Y, 2) < Math.Pow(player.Radius, 2))
+                DarkRiftReader reader = e.Message.GetReader();
+
+                float newX = reader.ReadSingle();
+                float newY = reader.ReadSingle();
+
+                Client client = (Client)sender;
+
+                Player player = players[client];
+
+                player.X = newX;
+                player.Y = newY;
+
+                AgarFoodManager foodManager = PluginManager.GetPluginByType<AgarFoodManager>();
+
+                foreach (FoodItem food in foodManager.Food)
                 {
-                    player.Radius += food.Radius;
-                    SendRadiusUpdate(player);
-                    foodManager.Eat(food);
+                    if (Math.Pow(player.X - food.X, 2) + Math.Pow(player.Y - food.Y, 2) < Math.Pow(player.Radius, 2))
+                    {
+                        player.Radius += food.Radius;
+                        SendRadiusUpdate(player);
+                        foodManager.Eat(food);
+                    }
                 }
-            }
 
-            foreach (Player p in players.Values)
-            {
-                if (p != player && Math.Pow(player.X - p.X, 2) + Math.Pow(player.Y - p.Y, 2) < Math.Pow(player.Radius, 2))
+                foreach (Player p in players.Values)
                 {
-                    player.Radius += p.Radius;
-                    SendRadiusUpdate(player);
-                    Kill(p);
+                    if (p != player && Math.Pow(player.X - p.X, 2) + Math.Pow(player.Y - p.Y, 2) < Math.Pow(player.Radius, 2))
+                    {
+                        player.Radius += p.Radius;
+                        SendRadiusUpdate(player);
+                        Kill(p);
+                    }
                 }
+
+                DarkRiftWriter writer = new DarkRiftWriter();
+                writer.Write(player.ID);
+                writer.Write(player.X);
+                writer.Write(player.Y);
+                e.Message.SetWriter(writer);
+
+                e.DistributeTo.UnionWith(ClientManager.GetAllClients().Where(x => x != client));
             }
-
-            DarkRiftWriter writer = new DarkRiftWriter();
-            writer.Write(player.ID);
-            writer.Write(player.X);
-            writer.Write(player.Y);
-            e.Message.SetWriter(writer);
-
-            e.DistributeTo.UnionWith(ClientManager.GetAllClients().Where(x => x != client));
         }
 
         void ClientDisconnected(object sender, ClientDisconnectedEventArgs e)
