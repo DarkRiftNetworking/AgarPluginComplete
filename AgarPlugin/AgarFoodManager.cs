@@ -63,7 +63,7 @@ namespace AgarPlugin
 
             Message playerMessage = new TagSubjectMessage(FOOD_TAG, SPAWN_SUBJECT, foodWriter);
 
-            e.Client.SendMessage(playerMessage, SendMode.Reliable);         //TODO Might need to be fragmented?
+            e.Client.SendMessage(playerMessage, SendMode.FragmentedReliable);         //TODO Might need to be fragmented?
         }
 
         public void Eat(FoodItem foodItem)
@@ -82,7 +82,7 @@ namespace AgarPlugin
             Message playerMessage = new TagSubjectMessage(FOOD_TAG, MOVE_SUBJECT, foodWriter);
 
             foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(playerMessage, SendMode.Reliable);
+                client.SendMessage(playerMessage, SendMode.FragmentedReliable);
         }
     }
 }

@@ -61,7 +61,7 @@ namespace AgarPlugin
             Message newPlayerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, newPlayerWriter);
 
             foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
-                client.SendMessage(newPlayerMessage, SendMode.Reliable);
+                client.SendMessage(newPlayerMessage, SendMode.FragmentedReliable);
 
             players.Add(e.Client, newPlayer);
 
@@ -80,7 +80,7 @@ namespace AgarPlugin
 
             Message playerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, playerWriter);
 
-            e.Client.SendMessage(playerMessage, SendMode.Reliable);         //TODO Might need to be fragmented? Good to introduce it here...
+            e.Client.SendMessage(playerMessage, SendMode.FragmentedReliable);
 
             e.Client.MessageReceived += MovementMessageReceived;
         }
@@ -146,7 +146,7 @@ namespace AgarPlugin
             TagSubjectMessage message = new TagSubjectMessage(SPAWN_TAG, DESPAWN_SUBJECT, writer);
 
             foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(message, SendMode.Reliable);
+                client.SendMessage(message, SendMode.FragmentedReliable);
         }
 
         void SendRadiusUpdate(Player player)
