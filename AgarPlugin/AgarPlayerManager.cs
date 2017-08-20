@@ -21,9 +21,7 @@ namespace AgarPlugin
 
         const ushort MOVE_SUBJECT = 0;
         const ushort RADIUS_SUBJECT = 1;
-
-        public override string Name => nameof(AgarPlayerManager);
-
+        
         public override bool ThreadSafe => false;
 
         public override Version Version => new Version(1, 0, 0);
@@ -61,7 +59,7 @@ namespace AgarPlugin
             Message newPlayerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, newPlayerWriter);
 
             foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
-                client.SendMessage(newPlayerMessage, SendMode.FragmentedReliable);
+                client.SendMessage(newPlayerMessage, SendMode.Reliable);
 
             players.Add(e.Client, newPlayer);
 
@@ -80,7 +78,7 @@ namespace AgarPlugin
 
             Message playerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, playerWriter);
 
-            e.Client.SendMessage(playerMessage, SendMode.FragmentedReliable);
+            e.Client.SendMessage(playerMessage, SendMode.Reliable);
 
             e.Client.MessageReceived += MovementMessageReceived;
         }
@@ -146,7 +144,7 @@ namespace AgarPlugin
             TagSubjectMessage message = new TagSubjectMessage(SPAWN_TAG, DESPAWN_SUBJECT, writer);
 
             foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(message, SendMode.FragmentedReliable);
+                client.SendMessage(message, SendMode.Reliable);
         }
 
         void SendRadiusUpdate(Player player)

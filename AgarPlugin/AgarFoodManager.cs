@@ -15,9 +15,7 @@ namespace AgarPlugin
         const byte FOOD_TAG = 2;
         const ushort SPAWN_SUBJECT = 0;
         const ushort MOVE_SUBJECT = 1;
-
-        public override string Name => nameof(AgarFoodManager);
-
+        
         public override bool ThreadSafe => false;
 
         public override Version Version => new Version(1, 0, 0);
@@ -63,7 +61,7 @@ namespace AgarPlugin
 
             Message playerMessage = new TagSubjectMessage(FOOD_TAG, SPAWN_SUBJECT, foodWriter);
 
-            e.Client.SendMessage(playerMessage, SendMode.FragmentedReliable);         //TODO Might need to be fragmented?
+            e.Client.SendMessage(playerMessage, SendMode.Reliable);
         }
 
         public void Eat(FoodItem foodItem)
@@ -82,7 +80,7 @@ namespace AgarPlugin
             Message playerMessage = new TagSubjectMessage(FOOD_TAG, MOVE_SUBJECT, foodWriter);
 
             foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(playerMessage, SendMode.FragmentedReliable);
+                client.SendMessage(playerMessage, SendMode.Reliable);
         }
     }
 }
