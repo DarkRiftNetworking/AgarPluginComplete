@@ -47,21 +47,22 @@ namespace AgarPlugin
 
         void ClientConnected(object sender, ClientConnectedEventArgs e)
         {
-            DarkRiftWriter foodWriter = new DarkRiftWriter();
-
-            foreach (FoodItem foodItem in food)
+            using (DarkRiftWriter foodWriter = DarkRiftWriter.Create())
             {
-                foodWriter.Write(foodItem.ID);
-                foodWriter.Write(foodItem.X);
-                foodWriter.Write(foodItem.Y);
-                foodWriter.Write(foodItem.ColorR);
-                foodWriter.Write(foodItem.ColorG);
-                foodWriter.Write(foodItem.ColorB);
+                foreach (FoodItem foodItem in food)
+                {
+                    foodWriter.Write(foodItem.ID);
+                    foodWriter.Write(foodItem.X);
+                    foodWriter.Write(foodItem.Y);
+                    foodWriter.Write(foodItem.ColorR);
+                    foodWriter.Write(foodItem.ColorG);
+                    foodWriter.Write(foodItem.ColorB);
+                }
+
+                using (Message playerMessage = TagSubjectMessage.Create(FOOD_TAG, SPAWN_SUBJECT, foodWriter))
+                    e.Client.SendMessage(playerMessage, SendMode.Reliable);
+
             }
-
-            Message playerMessage = new TagSubjectMessage(FOOD_TAG, SPAWN_SUBJECT, foodWriter);
-
-            e.Client.SendMessage(playerMessage, SendMode.Reliable);
         }
 
         public void Eat(FoodItem foodItem)
@@ -71,16 +72,18 @@ namespace AgarPlugin
             foodItem.X = (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2;
             foodItem.Y = (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2;
 
-            DarkRiftWriter foodWriter = new DarkRiftWriter();
-            
-            foodWriter.Write(foodItem.ID);
-            foodWriter.Write(foodItem.X);
-            foodWriter.Write(foodItem.Y);
+            using (DarkRiftWriter foodWriter = DarkRiftWriter.Create())
+            {
+                foodWriter.Write(foodItem.ID);
+                foodWriter.Write(foodItem.X);
+                foodWriter.Write(foodItem.Y);
 
-            Message playerMessage = new TagSubjectMessage(FOOD_TAG, MOVE_SUBJECT, foodWriter);
-
-            foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(playerMessage, SendMode.Reliable);
+                using (Message playerMessage = TagSubjectMessage.Create(FOOD_TAG, MOVE_SUBJECT, foodWriter))
+                {
+                    foreach (Client client in ClientManager.GetAllClients())
+                        client.SendMessage(playerMessage, SendMode.Reliable);
+                }
+            }
         }
     }
 }

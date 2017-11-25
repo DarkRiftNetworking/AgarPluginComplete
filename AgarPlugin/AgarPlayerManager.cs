@@ -47,89 +47,97 @@ namespace AgarPlugin
                 (byte)r.Next(0, 200)
             );
 
-            DarkRiftWriter newPlayerWriter = new DarkRiftWriter();
-            newPlayerWriter.Write(newPlayer.ID);
-            newPlayerWriter.Write(newPlayer.X);
-            newPlayerWriter.Write(newPlayer.Y);
-            newPlayerWriter.Write(newPlayer.Radius);
-            newPlayerWriter.Write(newPlayer.ColorR);
-            newPlayerWriter.Write(newPlayer.ColorG);
-            newPlayerWriter.Write(newPlayer.ColorB);
+            using (DarkRiftWriter newPlayerWriter = DarkRiftWriter.Create())
+            {
+                newPlayerWriter.Write(newPlayer.ID);
+                newPlayerWriter.Write(newPlayer.X);
+                newPlayerWriter.Write(newPlayer.Y);
+                newPlayerWriter.Write(newPlayer.Radius);
+                newPlayerWriter.Write(newPlayer.ColorR);
+                newPlayerWriter.Write(newPlayer.ColorG);
+                newPlayerWriter.Write(newPlayer.ColorB);
 
-            Message newPlayerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, newPlayerWriter);
-
-            foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
-                client.SendMessage(newPlayerMessage, SendMode.Reliable);
+                using (Message newPlayerMessage = TagSubjectMessage.Create(SPAWN_TAG, SPAWN_SUBJECT, newPlayerWriter))
+                {
+                    foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
+                        client.SendMessage(newPlayerMessage, SendMode.Reliable);
+                }
+            }
 
             players.Add(e.Client, newPlayer);
 
-            DarkRiftWriter playerWriter = new DarkRiftWriter();
-
-            foreach (Player player in players.Values)
+            using (DarkRiftWriter playerWriter = DarkRiftWriter.Create())
             {
-                playerWriter.Write(player.ID);
-                playerWriter.Write(player.X);
-                playerWriter.Write(player.Y);
-                playerWriter.Write(player.Radius);
-                playerWriter.Write(player.ColorR);
-                playerWriter.Write(player.ColorG);
-                playerWriter.Write(player.ColorB);
+                foreach (Player player in players.Values)
+                {
+                    playerWriter.Write(player.ID);
+                    playerWriter.Write(player.X);
+                    playerWriter.Write(player.Y);
+                    playerWriter.Write(player.Radius);
+                    playerWriter.Write(player.ColorR);
+                    playerWriter.Write(player.ColorG);
+                    playerWriter.Write(player.ColorB);
+                }
+
+                using (Message playerMessage = TagSubjectMessage.Create(SPAWN_TAG, SPAWN_SUBJECT, playerWriter))
+                    e.Client.SendMessage(playerMessage, SendMode.Reliable);
             }
-
-            Message playerMessage = new TagSubjectMessage(SPAWN_TAG, SPAWN_SUBJECT, playerWriter);
-
-            e.Client.SendMessage(playerMessage, SendMode.Reliable);
 
             e.Client.MessageReceived += MovementMessageReceived;
         }
 
         void MovementMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            TagSubjectMessage message = e.Message as TagSubjectMessage;
-
-            if (message != null && message.Tag == MOVEMENT_TAG)
+            using (TagSubjectMessage message = e.GetMessage() as TagSubjectMessage)
             {
-                DarkRiftReader reader = e.Message.GetReader();
-
-                float newX = reader.ReadSingle();
-                float newY = reader.ReadSingle();
-
-                Client client = (Client)sender;
-
-                Player player = players[client];
-
-                player.X = newX;
-                player.Y = newY;
-
-                AgarFoodManager foodManager = PluginManager.GetPluginByType<AgarFoodManager>();
-
-                foreach (FoodItem food in foodManager.Food)
+                if (message != null && message.Tag == MOVEMENT_TAG)
                 {
-                    if (Math.Pow(player.X - food.X, 2) + Math.Pow(player.Y - food.Y, 2) < Math.Pow(player.Radius, 2))
+                    using (DarkRiftReader reader = message.GetReader())
                     {
-                        player.Radius += food.Radius;
-                        SendRadiusUpdate(player);
-                        foodManager.Eat(food);
+                        float newX = reader.ReadSingle();
+                        float newY = reader.ReadSingle();
+
+                        Client client = (Client)sender;
+
+                        Player player = players[client];
+
+                        player.X = newX;
+                        player.Y = newY;
+
+                        AgarFoodManager foodManager = PluginManager.GetPluginByType<AgarFoodManager>();
+
+                        foreach (FoodItem food in foodManager.Food)
+                        {
+                            if (Math.Pow(player.X - food.X, 2) + Math.Pow(player.Y - food.Y, 2) < Math.Pow(player.Radius, 2))
+                            {
+                                player.Radius += food.Radius;
+                                SendRadiusUpdate(player);
+                                foodManager.Eat(food);
+                            }
+                        }
+
+                        foreach (Player p in players.Values)
+                        {
+                            if (p != player && Math.Pow(player.X - p.X, 2) + Math.Pow(player.Y - p.Y, 2) < Math.Pow(player.Radius, 2))
+                            {
+                                player.Radius += p.Radius;
+                                SendRadiusUpdate(player);
+                                Kill(p);
+                            }
+                        }
+
+                        using (DarkRiftWriter writer = DarkRiftWriter.Create())
+                        {
+                            writer.Write(player.ID);
+                            writer.Write(player.X);
+                            writer.Write(player.Y);
+                            message.SetWriter(writer);
+                        }
+
+                        foreach (Client c in ClientManager.GetAllClients().Where(x => x != client))
+                            c.SendMessage(message, e.SendMode);
                     }
                 }
-
-                foreach (Player p in players.Values)
-                {
-                    if (p != player && Math.Pow(player.X - p.X, 2) + Math.Pow(player.Y - p.Y, 2) < Math.Pow(player.Radius, 2))
-                    {
-                        player.Radius += p.Radius;
-                        SendRadiusUpdate(player);
-                        Kill(p);
-                    }
-                }
-
-                DarkRiftWriter writer = new DarkRiftWriter();
-                writer.Write(player.ID);
-                writer.Write(player.X);
-                writer.Write(player.Y);
-                e.Message.SetWriter(writer);
-
-                e.DistributeTo.UnionWith(ClientManager.GetAllClients().Where(x => x != client));
             }
         }
 
@@ -137,26 +145,31 @@ namespace AgarPlugin
         {
             players.Remove(e.Client);
 
-            DarkRiftWriter writer = new DarkRiftWriter();
+            using (DarkRiftWriter writer = DarkRiftWriter.Create())
+            {
+                writer.Write(e.Client.GlobalID);
 
-            writer.Write(e.Client.GlobalID);
-
-            TagSubjectMessage message = new TagSubjectMessage(SPAWN_TAG, DESPAWN_SUBJECT, writer);
-
-            foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(message, SendMode.Reliable);
+                using (TagSubjectMessage message = TagSubjectMessage.Create(SPAWN_TAG, DESPAWN_SUBJECT, writer))
+                {
+                    foreach (Client client in ClientManager.GetAllClients())
+                        client.SendMessage(message, SendMode.Reliable);
+                }
+            }
         }
 
         void SendRadiusUpdate(Player player)
         {
-            DarkRiftWriter writer = new DarkRiftWriter();
-            writer.Write(player.ID);
-            writer.Write(player.Radius);
+            using (DarkRiftWriter writer = DarkRiftWriter.Create())
+            {
+                writer.Write(player.ID);
+                writer.Write(player.Radius);
 
-            TagSubjectMessage message = new TagSubjectMessage(MOVEMENT_TAG, RADIUS_SUBJECT, writer);
-
-            foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(message, SendMode.Unreliable);
+                using (TagSubjectMessage message = TagSubjectMessage.Create(MOVEMENT_TAG, RADIUS_SUBJECT, writer))
+                {
+                    foreach (Client client in ClientManager.GetAllClients())
+                        client.SendMessage(message, SendMode.Unreliable);
+                }
+            }
         }
 
         void Kill(Player player)
@@ -166,15 +179,18 @@ namespace AgarPlugin
             player.X = (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2;
             player.Y = (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2;
 
-            DarkRiftWriter writer = new DarkRiftWriter();
-            writer.Write(player.ID);
-            writer.Write(player.X);
-            writer.Write(player.Y);
+            using (DarkRiftWriter writer = DarkRiftWriter.Create())
+            {
+                writer.Write(player.ID);
+                writer.Write(player.X);
+                writer.Write(player.Y);
 
-            TagSubjectMessage message = new TagSubjectMessage(MOVEMENT_TAG, MOVE_SUBJECT, writer);
-
-            foreach (Client client in ClientManager.GetAllClients())
-                client.SendMessage(message, SendMode.Unreliable);
+                using (TagSubjectMessage message = TagSubjectMessage.Create(MOVEMENT_TAG, MOVE_SUBJECT, writer))
+                {
+                    foreach (Client client in ClientManager.GetAllClients())
+                        client.SendMessage(message, SendMode.Unreliable);
+                }
+            }
 
             player.Radius = 1f;
 

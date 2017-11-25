@@ -31,10 +31,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DarkRift">
-      <HintPath>..\..\DarkRift2.1\DarkRift\bin\Debug\DarkRift.dll</HintPath>
+      <HintPath>..\..\DarkRift\DarkRift.Server.Console\bin\Debug\Lib\DarkRift.dll</HintPath>
     </Reference>
     <Reference Include="DarkRift.Server">
-      <HintPath>..\..\DarkRift2.1\DarkRift.Server\bin\Debug\DarkRift.Server.dll</HintPath>
+      <HintPath>..\..\DarkRift\DarkRift.Server.Console\bin\Debug\Lib\DarkRift.Server.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
