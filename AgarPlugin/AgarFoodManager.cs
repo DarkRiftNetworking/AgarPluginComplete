@@ -11,10 +11,6 @@ namespace AgarPlugin
     public class AgarFoodManager : Plugin
     {
         const float MAP_WIDTH = 20;
-
-        const byte FOOD_TAG = 2;
-        const ushort SPAWN_SUBJECT = 0;
-        const ushort MOVE_SUBJECT = 1;
         
         public override bool ThreadSafe => false;
 
@@ -59,7 +55,7 @@ namespace AgarPlugin
                     foodWriter.Write(foodItem.ColorB);
                 }
 
-                using (Message playerMessage = TagSubjectMessage.Create(FOOD_TAG, SPAWN_SUBJECT, foodWriter))
+                using (Message playerMessage = Message.Create(Tags.SpawnFoodTag, foodWriter))
                     e.Client.SendMessage(playerMessage, SendMode.Reliable);
 
             }
@@ -78,7 +74,7 @@ namespace AgarPlugin
                 foodWriter.Write(foodItem.X);
                 foodWriter.Write(foodItem.Y);
 
-                using (Message playerMessage = TagSubjectMessage.Create(FOOD_TAG, MOVE_SUBJECT, foodWriter))
+                using (Message playerMessage = Message.Create(Tags.MoveFoodTag, foodWriter))
                 {
                     foreach (Client client in ClientManager.GetAllClients())
                         client.SendMessage(playerMessage, SendMode.Reliable);

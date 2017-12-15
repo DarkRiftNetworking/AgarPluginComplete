@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AgarPlayerManager.cs" />
+    <Compile Include="Tags.cs" />
     <Compile Include="FoodItem.cs" />
     <Compile Include="AgarFoodManager.cs" />
     <Compile Include="IEdible.cs" />

@@ -12,15 +12,6 @@ namespace AgarPlugin
     public class AgarPlayerManager : Plugin
     {
         const float MAP_WIDTH = 20;
-
-        const byte SPAWN_TAG = 0;
-        const byte MOVEMENT_TAG = 1;
-
-        const ushort SPAWN_SUBJECT = 0;
-        const ushort DESPAWN_SUBJECT = 1;
-
-        const ushort MOVE_SUBJECT = 0;
-        const ushort RADIUS_SUBJECT = 1;
         
         public override bool ThreadSafe => false;
 
@@ -57,7 +48,7 @@ namespace AgarPlugin
                 newPlayerWriter.Write(newPlayer.ColorG);
                 newPlayerWriter.Write(newPlayer.ColorB);
 
-                using (Message newPlayerMessage = TagSubjectMessage.Create(SPAWN_TAG, SPAWN_SUBJECT, newPlayerWriter))
+                using (Message newPlayerMessage = Message.Create(Tags.SpawnPlayerTag, newPlayerWriter))
                 {
                     foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
                         client.SendMessage(newPlayerMessage, SendMode.Reliable);
@@ -79,7 +70,7 @@ namespace AgarPlugin
                     playerWriter.Write(player.ColorB);
                 }
 
-                using (Message playerMessage = TagSubjectMessage.Create(SPAWN_TAG, SPAWN_SUBJECT, playerWriter))
+                using (Message playerMessage = Message.Create(Tags.SpawnPlayerTag, playerWriter))
                     e.Client.SendMessage(playerMessage, SendMode.Reliable);
             }
 
@@ -88,9 +79,9 @@ namespace AgarPlugin
 
         void MovementMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            using (TagSubjectMessage message = e.GetMessage() as TagSubjectMessage)
+            using (Message message = e.GetMessage() as Message)
             {
-                if (message != null && message.Tag == MOVEMENT_TAG)
+                if (message.Tag == Tags.MovePlayerTag)
                 {
                     using (DarkRiftReader reader = message.GetReader())
                     {
@@ -149,7 +140,7 @@ namespace AgarPlugin
             {
                 writer.Write(e.Client.GlobalID);
 
-                using (TagSubjectMessage message = TagSubjectMessage.Create(SPAWN_TAG, DESPAWN_SUBJECT, writer))
+                using (Message message = Message.Create(Tags.DespawnPlayerTag, writer))
                 {
                     foreach (Client client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Reliable);
@@ -164,7 +155,7 @@ namespace AgarPlugin
                 writer.Write(player.ID);
                 writer.Write(player.Radius);
 
-                using (TagSubjectMessage message = TagSubjectMessage.Create(MOVEMENT_TAG, RADIUS_SUBJECT, writer))
+                using (Message message = Message.Create(Tags.SetRadiusTag, writer))
                 {
                     foreach (Client client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Unreliable);
@@ -185,7 +176,7 @@ namespace AgarPlugin
                 writer.Write(player.X);
                 writer.Write(player.Y);
 
-                using (TagSubjectMessage message = TagSubjectMessage.Create(MOVEMENT_TAG, MOVE_SUBJECT, writer))
+                using (Message message = Message.Create(Tags.MovePlayerTag, writer))
                 {
                     foreach (Client client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Unreliable);
