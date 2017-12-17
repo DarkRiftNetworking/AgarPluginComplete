@@ -8,7 +8,7 @@ namespace AgarPlugin
 {
     class Player : IEdible
     {
-        public uint ID { get; set; }
+        public ushort ID { get; set; }
         public float X { get; set; }
         public float Y { get; set; }
         public float Radius { get; set; }
@@ -16,7 +16,7 @@ namespace AgarPlugin
         public byte ColorG { get; set; }
         public byte ColorB { get; set; }
     
-        public Player(uint ID, float x, float y, float radius, byte colorR, byte colorG, byte colorB)
+        public Player(ushort ID, float x, float y, float radius, byte colorR, byte colorG, byte colorB)
         {
             this.ID = ID;
             this.X = x;

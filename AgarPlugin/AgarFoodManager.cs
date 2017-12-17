@@ -24,7 +24,7 @@ namespace AgarPlugin
         {
             Random r = new Random();
 
-            for (uint i = 0; i < 20; i++)
+            for (ushort i = 0; i < 20; i++)
             {
                 FoodItem foodItem = new FoodItem(
                     i,
@@ -57,7 +57,6 @@ namespace AgarPlugin
 
                 using (Message playerMessage = Message.Create(Tags.SpawnFoodTag, foodWriter))
                     e.Client.SendMessage(playerMessage, SendMode.Reliable);
-
             }
         }
 
@@ -76,7 +75,7 @@ namespace AgarPlugin
 
                 using (Message playerMessage = Message.Create(Tags.MoveFoodTag, foodWriter))
                 {
-                    foreach (Client client in ClientManager.GetAllClients())
+                    foreach (IClient client in ClientManager.GetAllClients())
                         client.SendMessage(playerMessage, SendMode.Reliable);
                 }
             }

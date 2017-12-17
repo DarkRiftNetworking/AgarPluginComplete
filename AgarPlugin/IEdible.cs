@@ -2,7 +2,7 @@
 {
     public interface IEdible
     {
-        uint ID { get; }
+        ushort ID { get; }
         float X { get; }
         float Y { get; }
         float Radius { get; }

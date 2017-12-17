@@ -17,7 +17,7 @@ namespace AgarPlugin
 
         public override Version Version => new Version(1, 0, 0);
 
-        Dictionary<Client, Player> players = new Dictionary<Client, Player>();
+        Dictionary<IClient, Player> players = new Dictionary<IClient, Player>();
 
         public AgarPlayerManager(PluginLoadData pluginLoadData) : base(pluginLoadData)
         {
@@ -29,7 +29,7 @@ namespace AgarPlugin
         {
             Random r = new Random();
             Player newPlayer = new Player(
-                e.Client.GlobalID,
+                e.Client.ID,
                 (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2,
                 (float)r.NextDouble() * MAP_WIDTH - MAP_WIDTH / 2,
                 1f,
@@ -50,7 +50,7 @@ namespace AgarPlugin
 
                 using (Message newPlayerMessage = Message.Create(Tags.SpawnPlayerTag, newPlayerWriter))
                 {
-                    foreach (Client client in ClientManager.GetAllClients().Where(x => x != e.Client))
+                    foreach (IClient client in ClientManager.GetAllClients().Where(x => x != e.Client))
                         client.SendMessage(newPlayerMessage, SendMode.Reliable);
                 }
             }
@@ -88,9 +88,7 @@ namespace AgarPlugin
                         float newX = reader.ReadSingle();
                         float newY = reader.ReadSingle();
 
-                        Client client = (Client)sender;
-
-                        Player player = players[client];
+                        Player player = players[e.Client];
 
                         player.X = newX;
                         player.Y = newY;
@@ -125,7 +123,7 @@ namespace AgarPlugin
                             message.SetWriter(writer);
                         }
 
-                        foreach (Client c in ClientManager.GetAllClients().Where(x => x != client))
+                        foreach (IClient c in ClientManager.GetAllClients().Where(x => x != e.Client))
                             c.SendMessage(message, e.SendMode);
                     }
                 }
@@ -138,11 +136,11 @@ namespace AgarPlugin
 
             using (DarkRiftWriter writer = DarkRiftWriter.Create())
             {
-                writer.Write(e.Client.GlobalID);
+                writer.Write(e.Client.ID);
 
                 using (Message message = Message.Create(Tags.DespawnPlayerTag, writer))
                 {
-                    foreach (Client client in ClientManager.GetAllClients())
+                    foreach (IClient client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Reliable);
                 }
             }
@@ -157,7 +155,7 @@ namespace AgarPlugin
 
                 using (Message message = Message.Create(Tags.SetRadiusTag, writer))
                 {
-                    foreach (Client client in ClientManager.GetAllClients())
+                    foreach (IClient client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Unreliable);
                 }
             }
@@ -178,7 +176,7 @@ namespace AgarPlugin
 
                 using (Message message = Message.Create(Tags.MovePlayerTag, writer))
                 {
-                    foreach (Client client in ClientManager.GetAllClients())
+                    foreach (IClient client in ClientManager.GetAllClients())
                         client.SendMessage(message, SendMode.Unreliable);
                 }
             }
