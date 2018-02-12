@@ -120,7 +120,7 @@ namespace AgarPlugin
                             writer.Write(player.ID);
                             writer.Write(player.X);
                             writer.Write(player.Y);
-                            message.SetWriter(writer);
+                            message.Serialize(writer);
                         }
 
                         foreach (IClient c in ClientManager.GetAllClients().Where(x => x != e.Client))
